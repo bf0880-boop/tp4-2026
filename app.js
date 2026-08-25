@@ -4,8 +4,9 @@ import express from 'express'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 
-const {Client} = pkg;
+const { Client } = pkg;
 const client = new Client(dbconfig)
+
 await client.connect()
 
 const app = express()
@@ -13,31 +14,90 @@ app.use(express.json())
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secreto123'
 
+
 app.post('/crearusuario', async (req, res) => {
-    const {userid, nombre, password} = req.body
-    const hash = await bcrypt.hash(password, 10)
-    await client.query("INSERT INTO usuario (id, nombre, password) VALUES ($1, $2, $3)", [userid, nombre, hash])
-    res.send("Usuario creado")
+    const user = req.body;
+
+    if (!user.userid || !user.nombre || !user.password) {
+        return res.status(400).json({
+            message: "Debe completar todos los campos"
+        });
+    }
+
+    try {
+        const hashedPassword = await bcrypt.hash(user.password, 10);
+
+        user.password = hashedPassword;
+
+        let result = await client.query(
+            "INSERT INTO usuario VALUES ($1, $2, $3) RETURNING *",
+            [user.userid, user.nombre, user.password]
+        );
+
+        console.log("Rows creadas:", result.rowCount);
+
+        res.send(result.rows);
+
+    } catch (error) {
+        return res.status(500).json({
+            message: error.message
+        });
+    }
 })
+
 
 app.post('/login', async (req, res) => {
-    const {userid, password} = req.body
-    const result = await client.query("SELECT * FROM usuario WHERE id = $1", [userid])
-    if (result.rows.length === 0) return res.status(400).send("Usuario no existe")
+    const user = req.body;
 
-    const usuario = result.rows[0]
-    const coincide = await bcrypt.compare(password, usuario.password)
-    if (!coincide) return res.status(400).send("Password incorrecto")
+    if (!user.userid || !user.password) {
+        return res.status(400).json({
+            message: "Debe completar todos los campos"
+        });
+    }
 
-    const token = jwt.sign({userid: usuario.id}, JWT_SECRET)
-    res.json({token})
+    try {
+        let result = await client.query(
+            "select * from usuario where userid=$1",
+            [user.userid]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                message: "Usuario no encontrado"
+            });
+        }
+
+        let dbUser = result.rows[0];
+
+        const passOK = await bcrypt.compare(
+            user.password,
+            dbUser.password
+        );
+
+        if (passOK) {
+            res.send({
+                nombre: dbUser.nombre
+            });
+        } else {
+            res.send("Clave inválida");
+        }
+
+    } catch (error) {
+        return res.status(500).json({
+            message: error.message
+        });
+    }
 })
 
+
 app.post('/escucho', async (req, res) => {
-    const token = req.headers.authorization?.replace('Bearer ', '') || req.body.token
+    const token =
+        req.headers.authorization?.replace('Bearer ', '') ||
+        req.body.token
 
     try {
         const payload = jwt.verify(token, JWT_SECRET)
+
         const result = await client.query(
             `SELECT cancion.nombre, escucha.reproducciones
              FROM escucha
@@ -45,13 +105,19 @@ app.post('/escucho', async (req, res) => {
              WHERE escucha.usuarioid = $1`,
             [payload.userid]
         )
+
         res.json(result.rows)
+
     } catch (err) {
         res.status(401).send("Token invalido")
     }
 })
 
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Local en http://localhost:${PORT}`));
+
+app.listen(PORT, () =>
+    console.log(`Local en http://localhost:${PORT}`)
+);
 
 export default app;
