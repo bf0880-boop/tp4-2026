@@ -18,7 +18,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'secreto123'
 app.post('/crearusuario', async (req, res) => {
     const user = req.body;
 
-    if (!user.userid || !user.nombre || !user.password) {
+    if ( !user.nombre || !user.email || !user.password) {
         return res.status(400).json({
             message: "Debe completar todos los campos"
         });
@@ -28,10 +28,9 @@ app.post('/crearusuario', async (req, res) => {
         const hashedPassword = await bcrypt.hash(user.password, 10);
 
         user.password = hashedPassword;
-
         let result = await client.query(
-            "INSERT INTO usuario VALUES ($1, $2, $3) RETURNING *",
-            [user.userid, user.nombre, user.password]
+            "INSERT INTO usuario(nombre,email,password) VALUES ($1, $2, $3) RETURNING *",
+            [user.nombre, user.email, user.password]
         );
 
         console.log("Rows creadas:", result.rowCount);
@@ -49,7 +48,7 @@ app.post('/crearusuario', async (req, res) => {
 app.post('/login', async (req, res) => {
     const user = req.body;
 
-    if (!user.userid || !user.password) {
+    if (!user.email || !user.password) {
         return res.status(400).json({
             message: "Debe completar todos los campos"
         });
@@ -57,8 +56,8 @@ app.post('/login', async (req, res) => {
 
     try {
         let result = await client.query(
-            "select * from usuario where userid=$1",
-            [user.userid]
+            "select * from usuario where email=$1",
+            [user.email]
         );
 
         if (result.rows.length === 0) {
@@ -75,8 +74,14 @@ app.post('/login', async (req, res) => {
         );
 
         if (passOK) {
+            const payload = {
+            id: dbUser.id
+            }
+            const token = jwt.sign(payload,JWT_SECRET,{expiresIn:'1h'} )
+
             res.send({
-                nombre: dbUser.nombre
+              token
+                
             });
         } else {
             res.send("Clave inválida");
