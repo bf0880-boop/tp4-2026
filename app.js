@@ -35,7 +35,7 @@ app.post('/crearusuario', async (req, res) => {
 
         console.log("Rows creadas:", result.rowCount);
 
-        res.send(result.rows);
+        res.send("Usuario creado");
 
     } catch (error) {
         return res.status(500).json({
@@ -84,7 +84,9 @@ app.post('/login', async (req, res) => {
                 
             });
         } else {
-            res.send("Clave inválida");
+            return res.status(401).json({
+                message: "Clave inválida"
+            });
         }
 
     } catch (error) {
@@ -100,20 +102,46 @@ app.post('/escucho', async (req, res) => {
         req.headers.authorization?.replace('Bearer ', '') ||
         req.body.token
 
+    const { cancion_id } = req.body;
+
     try {
         const payload = jwt.verify(token, JWT_SECRET)
+
+        if (!cancion_id) {
+            return res.status(400).json({
+                message: "Debe indicar cancion_id"
+            });
+        }
+
+        const existente = await client.query(
+            "SELECT * FROM escucha WHERE usuario_id = $1 AND cancion_id = $2",
+            [payload.id, cancion_id]
+        )
+
+        if (existente.rows.length === 0) {
+            await client.query(
+                "INSERT INTO escucha(usuario_id, cancion_id, reproducciones) VALUES ($1, $2, 1)",
+                [payload.id, cancion_id]
+            )
+        } else {
+            await client.query(
+                "UPDATE escucha SET reproducciones = reproducciones + 1 WHERE usuario_id = $1 AND cancion_id = $2",
+                [payload.id, cancion_id]
+            )
+        }
 
         const result = await client.query(
             `SELECT cancion.nombre, escucha.reproducciones
              FROM escucha
-             JOIN cancion ON cancion.id = escucha.cancionid
-             WHERE escucha.usuarioid = $1`,
-            [payload.userid]
+             JOIN cancion ON cancion.id = escucha.cancion_id
+             WHERE escucha.usuario_id = $1`,
+            [payload.id]
         )
 
         res.json(result.rows)
 
     } catch (err) {
+        console.log("error", err)
         res.status(401).send("Token invalido")
     }
 })
