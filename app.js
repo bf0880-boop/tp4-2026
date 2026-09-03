@@ -11,7 +11,7 @@ await client.connect()
 
 const app = express()
 app.use(express.json())
-
+app.use(cors());
 const JWT_SECRET = process.env.JWT_SECRET || 'secreto123'
 
 
