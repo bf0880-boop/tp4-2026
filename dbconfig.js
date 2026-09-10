@@ -1,4 +1,4 @@
-import 'dotenv/config'; // Carga automática en una sola línea
+import 'dotenv/config';
 
 const puerto = process.env.PUERTO;
 const dbconfig = {
