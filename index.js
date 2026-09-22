@@ -14,8 +14,10 @@ app.use(usuarioRoutes)
 app.use(cancionRoutes)
 app.use(escuchaRoutes)
 
-app.listen(PORT, () =>
-    console.log(`Local en http://localhost:${PORT}`)
-);
+if (!process.env.VERCEL) {
+    app.listen(PORT, () =>
+        console.log(`Local en http://localhost:${PORT}`)
+    );
+}
 
 export default app;

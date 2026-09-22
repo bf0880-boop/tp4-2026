@@ -1,9 +1,11 @@
 import pkg from 'pg'
 import dbconfig from './dbconfig.js'
 
-const { Client } = pkg;
-const client = new Client(dbconfig)
+const { Pool } = pkg;
+const pool = new Pool(dbconfig)
 
-await client.connect()
+pool.on('error', (err) => {
+    console.error('Error inesperado en el pool de PostgreSQL', err)
+})
 
-export default client;
+export default pool;
