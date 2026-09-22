@@ -2,7 +2,7 @@ import * as escuchaService from '../services/escucha.service.js'
 
 export async function  getEscucho (req, res) {
     try {
-      const result = await cancionService.getEscuchoByUser(req.user_id) 
+      const result = await escuchaService.getEscuchoByUser(req.user.id)
       res.status(201).json({message: result.rows})
 
     }
