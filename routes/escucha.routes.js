@@ -4,6 +4,7 @@ import { verifyToken } from '../middlewares/auth.middleware.js'
 
 const router = Router();
 
+router.get('/escucho/', verifyToken, cancionController.getEscucho)
 router.post('/escucho', verifyToken, escuchaController.escuchar);
 
 export default router;

@@ -1,5 +1,34 @@
 import * as cancionService from '../services/cancion.service.js'
 
+export async function  getCanciones (_, res) {
+    try {
+      const result = await cancionService.getCanciones()
+      res.status(200).json({message:result.rows})
+
+    }
+    catch (err) {
+      console.log("Error:", err)
+      return res.status(500).json({message: err.message})
+    }
+}
+
+export async function  getCancion (req, res) {
+    const id = req.params.id;
+    if(!id  )
+      return res.status(400).json({message:"Tenes que enviar id!"})
+
+    try {
+      const result = await cancionService.getCancionById(id)
+      res.status(200).json({message:result.rows[0]})
+
+    }
+    catch (err) {
+      console.log("Error:", err)
+      return res.status(500).json({message: err.message})
+    }
+}
+
+
 export async function crearCancion(req, res) {
     const { nombre } = req.body;
 

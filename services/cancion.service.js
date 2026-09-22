@@ -1,5 +1,13 @@
 import client from '../db.js'
 
+export async function getCancionById(id) {
+    return await pool.query("select * from cancion where id = $1",[id])
+}
+
+export async function getCanciones(id) {
+    return await pool.query("select * from cancion",[id])
+}
+
 export async function crearCancion(nombre) {
     const result = await client.query(
         "INSERT INTO cancion(nombre) VALUES ($1) RETURNING *",
