@@ -53,7 +53,8 @@ export async function crearCancion(req, res) {
 }
 
 export async function modificarCancion(req, res) {
-    const { id, nombre } = req.body;
+    const { id } = req.params;
+    const { nombre } = req.body;
 
     if (!id || !nombre) {
         return res.status(400).json({
@@ -82,7 +83,7 @@ export async function modificarCancion(req, res) {
 }
 
 export async function borrarCancion(req, res) {
-    const { id } = req.body;
+    const { id } = req.params;
 
     if (!id) {
         return res.status(400).json({

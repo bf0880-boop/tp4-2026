@@ -51,15 +51,15 @@ export async function escuchar(usuarioId, cancionId) {
 
 async function actualizarFan(usuarioId) {
     const contadas = await client.query(
-        "SELECT COUNT(DISTINCT cancion_id) AS cantidad FROM escucha WHERE usuario_id = $1",
+        "SELECT COALESCE(SUM(reproducciones), 0) AS cantidad FROM escucha WHERE usuario_id = $1",
         [usuarioId]
     );
 
     const cantidad = Number(contadas.rows[0].cantidad);
 
-    if (cantidad > CANCIONES_PARA_SER_FAN) {
+    if (cantidad >= CANCIONES_PARA_SER_FAN) {
         await client.query(
-            "UPDATE usuario SET fan = true WHERE id = $1 AND fan = false",
+            "UPDATE usuario SET fan = true WHERE id = $1 AND fan IS DISTINCT FROM true",
             [usuarioId]
         );
 
