@@ -1,11 +1,11 @@
 import client from '../db.js'
 
 export async function getCancionById(id) {
-    return await pool.query("select * from cancion where id = $1",[id])
+    return await client.query("select * from cancion where id = $1",[id])
 }
 
-export async function getCanciones(id) {
-    return await pool.query("select * from cancion",[id])
+export async function getCanciones() {
+    return await client.query("select * from cancion")
 }
 
 export async function crearCancion(nombre) {

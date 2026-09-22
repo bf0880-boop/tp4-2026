@@ -2,11 +2,11 @@ import client from '../db.js'
 import { CANCIONES_PARA_SER_FAN } from '../config.js'
 
 export async function getEscuchoByUser(user_id) {
-    return await pool.query("select c.id, c.nombre, e.reproducciones from escucha e inner join cancion c on e.cancion_id = c.id where usuario_id = $1",[user_id])
+    return await client.query("select c.id, c.nombre, e.reproducciones from escucha e inner join cancion c on e.cancion_id = c.id where usuario_id = $1",[user_id])
 }
 
 export async function getEscuchoCountByUser(user_id) {
-    return await pool.query("select sum(reproducciones) as cantidad from escucha where usuario_id = $1",[user_id])
+    return await client.query("select sum(reproducciones) as cantidad from escucha where usuario_id = $1",[user_id])
 }
 
 export async function escuchar(usuarioId, cancionId) {
