@@ -14,7 +14,7 @@ export async function  getEscucho (req, res) {
 
 export async function escuchar(req, res) {
     const usuarioId = req.user.id;
-    const id = req.params.id;
+    const { id } = req.body;
 
     if (!id) {
         return res.status(400).json({
